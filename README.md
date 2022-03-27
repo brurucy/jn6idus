@@ -14,6 +14,8 @@ However, neither `TreeSet` nor `SkipList` provide this functionality.
 
 #### Benchmarks
 
+##### TreeSet and SkipList
+
 I have provided some simple benchmarks alongside the tests.
 
 The benchmarks test the performance of the Spine, TreeSet and SkipList.
@@ -87,3 +89,25 @@ In order to get the i-th element of a SkipList or a TreeSet, one has to **transf
 Meanwhile, the Spine has a very lightweight index that allows one to fetch the i-th element in O(B) time, with B being the `vertebraSize`, in contrast to 
 using `toArray()`, which is `O(n)`.
 
+##### Priority Queue
+
+The Spine can also be used in place of a Priority Queue, with complexity O(B) for **poll**, versus O(1) for the priority queue.
+
+One of the advantages that the spine can provide, is of being able to pop both the maximum and the minimum with the same complexity.
+
+```
+Add - Random
+	Spine 1024 - Time taken 1236 ns/op 
+	PriorityQueue - Time taken 74 ns/op 
+Contains - Random
+	Spine 1024 - Time taken 230 ns/op 
+	PriorityQueue - Time taken 696057 ns/op 
+Peek - Random
+	Spine 1024 - Time taken 12 ns/op 
+	PriorityQueue 1024 - Time taken 9 ns/op 
+Poll - Random
+	Spine 1024 - Time taken 204 ns/op 
+	PriorityQueue 1024 - Time taken 765 ns/op 
+```
+
+As it can be seen, unless your usage of `PriorityQueue` is heavily centered around `Add`, there is very little point to choosing it over `Spine`.

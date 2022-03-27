@@ -21,8 +21,8 @@ class IntegerTuple {
  * */
 public class Spine<T extends Comparable<T>> {
     public ArrayList<Vertebra<T>> vertebrae;
-    public Cord cord;
-    public int length;
+    private Cord cord;
+    private int length;
     public int vertebraSize;
 
     /* Initializes the spine with a vertebra size.
@@ -35,6 +35,10 @@ public class Spine<T extends Comparable<T>> {
         this.vertebrae.add(new Vertebra<>());
         this.vertebraSize = vertebraSize;
         this.length = 0;
+    }
+
+    public int size() {
+        return this.length;
     }
 
     private void buildCord() {
@@ -202,5 +206,66 @@ public class Spine<T extends Comparable<T>> {
             return false;
         }
         return this.vertebrae.get(vertebraIndex).has(key);
+    }
+
+    /* Removes and returns the smallest element
+     * @return the element in question or null.
+     * */
+    public T pollFirst() {
+        if (this.length == 0) {
+            return null;
+        }
+        T out = this.vertebrae.get(0).remove(0);
+        this.cord.decreaseLength(0);
+        if (this.vertebrae.get(0).size() == 0) {
+            if (this.length != 1) {
+                this.vertebrae.remove(0);
+            }
+            this.cord = new Cord(this.vertebrae);
+        }
+        this.length -= 1;
+        return out;
+    }
+
+    /* Returns the largest element
+     * @return the element in question or null
+     * */
+    public T peekFirst() {
+        if (this.length == 0) {
+            return null;
+        }
+        return this.vertebrae.get(0).get(0);
+    }
+
+    /* Removes and returns the largest element
+     * @return the element in question or null
+     * */
+    public T pollLast() {
+        if (this.length == 0) {
+            return null;
+        }
+        int vertebraeSize = vertebrae.size();
+        int lastVertebraSize = this.vertebrae.get(vertebraeSize - 1).size();
+        T out = this.vertebrae.get(vertebraeSize - 1).remove(lastVertebraSize - 1);
+        this.cord.decreaseLength(vertebraeSize - 1);
+        if (this.vertebrae.get(vertebraeSize - 1).size() == 0) {
+            if (this.length != 1) {
+                this.vertebrae.remove(vertebraeSize - 1);
+            }
+            this.cord = new Cord(this.vertebrae);
+        } else {
+            this.vertebrae.get(vertebraeSize - 1).max = this.vertebrae.get(vertebraeSize - 1).get(lastVertebraSize - 2);
+        }
+        this.length -= 1;
+        return out;
+    }
+
+    public T peekLast() {
+        if (this.length == 0) {
+            return null;
+        }
+        int vertebraeSize = vertebrae.size();
+        int lastVertebraSize = this.vertebrae.get(vertebraeSize - 1).size();
+        return this.vertebrae.get(vertebraeSize - 1).get(lastVertebraSize - 1);
     }
 }

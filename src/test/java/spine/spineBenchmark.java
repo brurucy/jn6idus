@@ -2,7 +2,7 @@ package spine;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Iterator;
+import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -32,7 +32,7 @@ public class spineBenchmark {
             spine.push(i);
         }
         System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / 1000000);
-        assert spine.length == 1000000;
+        assert spine.size() == 1000000;
 
 //        now = System.nanoTime();
 //        for (int i = 0; i < 1000000; i++) {
@@ -97,7 +97,7 @@ public class spineBenchmark {
             spine.delete(i);
         }
         assert spine.vertebrae.size() == 1;
-        assert spine.length == 0;
+        assert spine.size() == 0;
         System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / 1000000);
 
 //        now = System.nanoTime();
@@ -144,7 +144,7 @@ public class spineBenchmark {
         for (int randomInt : randomInts) {
             spine.push(randomInt);
         }
-        System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / spine.length);
+        System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / spine.size());
 
 //        now = System.nanoTime();
 //        for (int randomInt : randomInts) {
@@ -175,7 +175,7 @@ public class spineBenchmark {
         for (int randomInt : randomInts) {
             spine.has(randomInt);
         }
-        System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / spine.length);
+        System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / spine.size());
 
 //        now = System.nanoTime();
 //        for (int randomInt : randomInts) {
@@ -202,14 +202,14 @@ public class spineBenchmark {
 //        }
 //        System.out.printf("\tSpine 8192 - Time taken %d ns/op \n", (System.nanoTime() - now) / 1000000);
 
-        int spineLength = spine.length;
+        int spineLength = spine.size();
         now = System.nanoTime();
         for (int randomInt : randomInts) {
             spine.delete(randomInt);
         }
         System.out.printf("\tSpine 1024 - Time taken %d ns/op \n", (System.nanoTime() - now) / spineLength);
         assert spine.vertebrae.size() == 1;
-        assert spine.length == 0;
+        assert spine.size() == 0;
 //        now = System.nanoTime();
 //        for (int randomInt : randomInts) {
 //            spineTiny.delete(randomInt);
@@ -271,10 +271,10 @@ public class spineBenchmark {
         System.out.println("Get the i-th element - Order Irrelevant");
 
         now = System.nanoTime();
-        for (int ith = 0; ith < spine.length; ith++) {
+        for (int ith = 0; ith < spine.size(); ith++) {
             spine.get(ith);
         }
-        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.length);
+        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.size());
 
         now = System.nanoTime();
         for (int i = 0; i < 10; i++) {
@@ -287,5 +287,72 @@ public class spineBenchmark {
             Object[] sortedArray = treeSet.toArray();
         }
         System.out.printf("\tTreeSet - Time taken %s ns/op \n", (System.nanoTime() - now) / 10);
+    }
+
+    @Test
+    void BenchmarkQueueTest() {
+        Spine<Integer> spine = new Spine<>(1024);
+        PriorityQueue<Integer> priorityQueue = new PriorityQueue<>();
+
+        Random random = new Random();
+
+        int[] randomInts = random.ints(1000000, 0, 1000000).toArray();
+
+        System.out.println("Add - Random");
+        long now = System.nanoTime();
+        for (int randomInt : randomInts) {
+            spine.push(randomInt);
+        }
+        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.size());
+
+        now = System.nanoTime();
+        for (int randomInt : randomInts) {
+            priorityQueue.add(randomInt);
+        }
+        System.out.printf("\tPriorityQueue - Time taken %s ns/op \n", (System.nanoTime() - now) / priorityQueue.size());
+
+        System.out.println("Contains - Random");
+        now = System.nanoTime();
+        for (int randomInt : randomInts) {
+            spine.get(randomInt);
+        }
+        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.size());
+
+//        now = System.nanoTime();
+//        for (int randomInt : randomInts) {
+//            priorityQueue.contains(randomInt);
+//        }
+//        System.out.printf("\tPriorityQueue - Time taken %s ns/op \n", (System.nanoTime() - now) / priorityQueue.size());
+
+        System.out.println("Peek - Random");
+        now = System.nanoTime();
+        for (int ith = 0; ith < spine.size(); ith++) {
+            spine.peekFirst();
+        }
+        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.size());
+
+        now = System.nanoTime();
+        for (int ith = 0; ith < priorityQueue.size(); ith++) {
+            priorityQueue.peek();
+        }
+        System.out.printf("\tPriorityQueue 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / priorityQueue.size());
+
+        System.out.println("Poll - Random");
+        int spineSize = spine.size();
+        now = System.nanoTime();
+        while (spine.size() != 0){
+            spine.pollFirst();
+        }
+        System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spineSize);
+        assert spine.size() == 0;
+
+        now = System.nanoTime();
+        int priorityQueueSize = priorityQueue.size();
+        while (priorityQueue.size() != 0) {
+            priorityQueue.poll();
+        }
+        System.out.printf("\tPriorityQueue - Time taken %s ns/op \n", (System.nanoTime() - now) / priorityQueueSize);
+        assert priorityQueue.size() == 0;
+
     }
 }

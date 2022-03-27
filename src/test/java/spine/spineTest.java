@@ -62,7 +62,7 @@ public class spineTest {
         spine.delete(2);
         assert spine.vertebrae.size() == 1;
         spine.delete(5);
-        assert spine.length == 0;
+        assert spine.size() == 0;
         assert spine.vertebrae.size() == 1;
         assert !spine.delete(5);
         assert !spine.delete(2);
@@ -78,15 +78,15 @@ public class spineTest {
         spine.push(2);
         spine.push(3);
 
-        assert spine.length == 4;
+        assert spine.size() == 4;
         spine.deleteByIndex(0);
-        assert spine.length == 3;
+        assert spine.size() == 3;
         assert spine.vertebrae.get(0).get(0).compareTo(1) != 0;
         assert spine.deleteByIndex(0).compareTo(2) == 0;
         assert spine.deleteByIndex(1).compareTo(5) == 0;
         assert spine.deleteByIndex(0).compareTo(3) == 0;
         assert spine.deleteByIndex(0) == null;
-        assert spine.length == 0;
+        assert spine.size() == 0;
     }
 
     @Test
@@ -119,6 +119,65 @@ public class spineTest {
         assert !spine.has(10);
         assert !spine.has(12);
         assert !spine.has(0);
+    }
+
+    @Test
+    void pollAndPeekFirstTest() {
+        Spine<Integer> spine = new Spine<>(2);
+        spine.push(1);
+        spine.push(5);
+        spine.push(2);
+        spine.push(3);
+
+        assert spine.size() == 4;
+        assert spine.peekFirst().compareTo(spine.pollFirst()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 5;
+
+        assert spine.size() == 3;
+        assert spine.peekFirst().compareTo(spine.pollFirst()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 5;
+
+        assert spine.size() == 2;
+        assert spine.peekFirst().compareTo(spine.pollFirst()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 5;
+
+        assert spine.size() == 1;
+        assert spine.peekFirst().compareTo(spine.pollFirst()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 5;
+
+        assert spine.size() == 0;
+        assert spine.peekFirst() == null && spine.pollFirst() == null;
+        assert spine.size() == 0;
+    }
+
+    @Test
+    void pollAndPeekLastTest() {
+        Spine<Integer> spine = new Spine<>(2);
+        spine.push(1);
+        spine.push(5);
+        spine.push(2);
+        spine.push(3);
+
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max.compareTo(spine.peekLast()) == 0;
+
+        assert spine.size() == 4;
+        assert spine.peekLast().compareTo(spine.pollLast()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 3;
+
+        assert spine.size() == 3;
+        assert spine.peekLast().compareTo(spine.pollLast()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 2;
+
+        assert spine.size() == 2;
+        assert spine.peekLast().compareTo(spine.pollLast()) == 0;
+        assert spine.vertebrae.get(spine.vertebrae.size() - 1).max == 1;
+
+        assert spine.size() == 1;
+        assert spine.peekLast().compareTo(spine.pollLast()) == 0;
+
+        assert spine.size() == 0;
+        assert spine.peekLast() == null && spine.pollLast() == null;
+        assert spine.size() == 0;
     }
 }
 
