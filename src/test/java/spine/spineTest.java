@@ -3,6 +3,9 @@ package spine;
 import org.junit.jupiter.api.Test;
 import spine.vertebra.Vertebra;
 
+import java.util.PriorityQueue;
+import java.util.Random;
+
 public class spineTest {
     @Test
     void PushWithBalanceTest() {
@@ -95,30 +98,76 @@ public class spineTest {
         spine.push(1);
         spine.push(5);
         spine.push(2);
+        spine.push(2);
         spine.push(3);
 
         assert spine.get(0).compareTo(1) == 0;
         assert spine.get(1).compareTo(2) == 0;
-        assert spine.get(2).compareTo(3) == 0;
-        assert spine.get(3).compareTo(5) == 0;
-        assert spine.get(4) == null;
+        assert spine.get(2).compareTo(2) == 0;
+        assert spine.get(3).compareTo(3) == 0;
+        assert spine.get(4).compareTo(5) == 0;
+        assert spine.get(5) == null;
+    }
+
+    class container implements Comparable<container> {
+        public int k;
+        public int v;
+        public container(int k, int v) {
+            this.k = k;
+            this.v = v;
+        }
+        @Override
+        public int compareTo(container other){
+            if (this.k < other.k)
+                return -1;
+            else if (this.k == other.k)
+                return 0;
+            else
+                return 1;
+        }
     }
 
     @Test
     void hasTest() {
-        Spine<Integer> spine = new Spine<>(2);
-        spine.push(1);
-        spine.push(5);
-        spine.push(2);
-        spine.push(3);
+        Spine<container> spine = new Spine<>(2);
+        PriorityQueue<container> priorityQueue = new PriorityQueue<>();
 
-        assert spine.has(1);
-        assert spine.has(5);
-        assert spine.has(2);
-        assert spine.has(3);
-        assert !spine.has(10);
-        assert !spine.has(12);
-        assert !spine.has(0);
+        container container1 = new container(1, 5);
+        container container2 = new container(5, 2);
+        container container3 = new container(2, 9);
+        container container4 = new container(5, 3);
+
+        spine.push(container1);
+        priorityQueue.add(container1);
+
+        spine.push(container2);
+        priorityQueue.add(container2);
+
+        spine.push(container3);
+        priorityQueue.add(container3);
+
+        spine.push(container4);
+        priorityQueue.add(container4);
+
+        assert spine.has(container1);
+        assert priorityQueue.contains(container1);
+        assert !spine.has(new container(1, 5));
+        assert !priorityQueue.contains(new container(1, 5));
+
+        assert spine.has(container2);
+        assert priorityQueue.contains(container2);
+        assert !spine.has(new container(5, 2));
+        assert !priorityQueue.contains(new container(5, 2));
+
+        assert spine.has(container3);
+        assert priorityQueue.contains(container3);
+        assert !spine.has(new container(2, 9));
+        assert !priorityQueue.contains(new container(2, 9));
+
+        assert priorityQueue.contains(container4);
+        assert spine.has(container4);
+        assert !spine.has(new container(5, 3));
+        assert !priorityQueue.contains(new container(5, 3));
     }
 
     @Test
@@ -178,6 +227,30 @@ public class spineTest {
         assert spine.size() == 0;
         assert spine.peekLast() == null && spine.pollLast() == null;
         assert spine.size() == 0;
+    }
+
+    @Test
+    void stressTest() {
+        Spine<Integer> spine = new Spine<>(1024);
+        PriorityQueue<Integer> priorityQueue = new PriorityQueue<>();
+
+        Random random = new Random();
+
+        int[] randomInts = random.ints(1000000, 0, 1000000).toArray();
+
+        for (int randomInt : randomInts) {
+            spine.push(randomInt);
+        }
+
+        for (int randomInt : randomInts) {
+            priorityQueue.add(randomInt);
+        }
+
+        for (int i = 0; i < randomInts.length; i++) {
+            assert spine.pollFirst().compareTo(priorityQueue.poll()) == 0;
+        }
+
+        assert spine.size() == priorityQueue.size();
     }
 }
 

@@ -42,17 +42,13 @@ public class Vertebra<T> extends ArrayList<T> {
             this.max = key;
             return super.add(key);
         } else {
-            Comparable<? super T> candidate = (Comparable<T>) this.get(position);
-            int cmp = candidate.compareTo(key);
-            if (cmp != 0) {
-                this.add(position, key);
-                int maxCmp = candidate.compareTo(this.max);
-                if (maxCmp > 0) {
-                    this.max = key;
-                }
-                return true;
+            Comparable<? super T> comparableKey = (Comparable<T>) key;
+            this.add(position, key);
+            int maxCmp = comparableKey.compareTo(this.max);
+            if (maxCmp > 0) {
+                this.max = key;
             }
-            return false;
+            return true;
         }
     }
 
@@ -62,8 +58,7 @@ public class Vertebra<T> extends ArrayList<T> {
             return false;
         }
         Comparable<? super T> candidate = (Comparable<T>) this.get(position);
-        int cmp = candidate.compareTo(key);
-        if (cmp == 0) {
+        if (candidate.equals(key)) {
             int maxCmp = candidate.compareTo(this.max);
             if (maxCmp == 0) {
                 this.max = this.get(this.size() - 1);

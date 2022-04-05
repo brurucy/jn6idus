@@ -235,8 +235,6 @@ public class spineBenchmark {
     @Test
     void BenchmarkIndexTest() {
         Spine<Integer> spine = new Spine<>(1024);
-        Spine<Integer> spineTiny = new Spine<>(128);
-        Spine<Integer> spineLarge = new Spine<>(8192);
         ConcurrentSkipListSet<Integer> skipList = new ConcurrentSkipListSet<>();
         TreeSet<Integer> treeSet = new TreeSet<>();
 
@@ -244,21 +242,9 @@ public class spineBenchmark {
 
         int[] randomInts = random.ints(1000000, 0, 1000000).toArray();
 
-        long now = System.nanoTime();
-//        for (int randomInt : randomInts) {
-//            spineLarge.push(randomInt);
-//        }
-//        System.out.printf("\tSpine 8192 - Time taken %d ns/op \n", (System.nanoTime() - now) / 1000000);
-
         for (int randomInt : randomInts) {
             spine.push(randomInt);
         }
-
-//        now = System.nanoTime();
-//        for (int randomInt : randomInts) {
-//            spineTiny.push(randomInt);
-//        }
-//        System.out.printf("\tSpine 128 - Time taken %d ns/op \n", (System.nanoTime() - now) / 1000000);
 
         for (int randomInt : randomInts) {
             skipList.add(randomInt);
@@ -270,7 +256,7 @@ public class spineBenchmark {
 
         System.out.println("Get the i-th element - Order Irrelevant");
 
-        now = System.nanoTime();
+        long now = System.nanoTime();
         for (int ith = 0; ith < spine.size(); ith++) {
             spine.get(ith);
         }
@@ -318,7 +304,7 @@ public class spineBenchmark {
         }
         System.out.printf("\tSpine 1024 - Time taken %s ns/op \n", (System.nanoTime() - now) / spine.size());
 
-//        now = System.nanoTime();
+//        now = System.nanoTime(); Takes way too long :)
 //        for (int randomInt : randomInts) {
 //            priorityQueue.contains(randomInt);
 //        }
@@ -353,6 +339,5 @@ public class spineBenchmark {
         }
         System.out.printf("\tPriorityQueue - Time taken %s ns/op \n", (System.nanoTime() - now) / priorityQueueSize);
         assert priorityQueue.size() == 0;
-
     }
 }
