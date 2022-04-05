@@ -14,11 +14,11 @@ public class spineTest {
         spine.push(5);
         spine.push(2);
         spine.push(3);
-        Vertebra<Integer> expectedVertebraOne = new Vertebra<>();
+        Vertebra<Integer> expectedVertebraOne = new Vertebra<>(1);
         expectedVertebraOne.add(1);
-        Vertebra<Integer> expectedVertebraTwo = new Vertebra<>();
+        Vertebra<Integer> expectedVertebraTwo = new Vertebra<>(1);
         expectedVertebraTwo.add(2);
-        Vertebra<Integer> expectedVertebraThree = new Vertebra<>();
+        Vertebra<Integer> expectedVertebraThree = new Vertebra<>(1);
         expectedVertebraThree.add(3);
         expectedVertebraThree.add(5);
 
@@ -55,18 +55,17 @@ public class spineTest {
         spine.push(3);
 
         spine.delete(3);
-        Vertebra<Integer> expectedVertabraOne = new Vertebra<>();
+        Vertebra<Integer> expectedVertabraOne = new Vertebra<>(1);
         expectedVertabraOne.add(5);
         assert spine.vertebrae.get(2).equals(expectedVertabraOne);
 
-        assert spine.vertebrae.size() == 3;
+        assert spine.size() == 3;
         spine.delete(1);
-        assert spine.vertebrae.size() == 2;
+        assert spine.size() == 2;
         spine.delete(2);
-        assert spine.vertebrae.size() == 1;
+        assert spine.size() == 1;
         spine.delete(5);
         assert spine.size() == 0;
-        assert spine.vertebrae.size() == 1;
         assert !spine.delete(5);
         assert !spine.delete(2);
         assert !spine.delete(1);
@@ -168,6 +167,77 @@ public class spineTest {
         assert spine.has(container4);
         assert !spine.has(new container(5, 3));
         assert !priorityQueue.contains(new container(5, 3));
+    }
+
+    @Test
+    void complexHasTest() {
+        Spine<container> spine = new Spine<>(1);
+
+        container container1 = new container(5, 1);
+        container container2 = new container(5, 2);
+        container container3 = new container(5, 3);
+        container container4 = new container(5, 4);
+        container container5 = new container(5, 5);
+        container container6 = new container(5, 6);
+        container container7 = new container(5, 7);
+        container container8 = new container(5, 8);
+        container container9 = new container(5, 9);
+
+        spine.push(container1);
+        spine.push(container2);
+        spine.push(container3);
+        spine.push(container4);
+        spine.push(container5);
+        spine.push(container6);
+        spine.push(container7);
+        spine.push(container8);
+
+        assert spine.has(container1);
+        assert spine.has(container2);
+        assert spine.has(container3);
+        assert spine.has(container4);
+        assert spine.has(container5);
+        assert spine.has(container6);
+        assert spine.has(container7);
+        assert spine.has(container8);
+        assert !spine.has(container9);
+
+        assert spine.delete(container1);
+        assert !spine.has(container1);
+        assert !spine.delete(container1);
+
+        assert spine.delete(container2);
+        assert !spine.has(container2);
+        assert !spine.delete(container2);
+
+        assert spine.delete(container3);
+        assert !spine.has(container3);
+        assert !spine.delete(container3);
+
+        assert spine.delete(container4);
+        assert !spine.has(container4);
+        assert !spine.delete(container4);
+
+        assert spine.delete(container5);
+        assert !spine.has(container5);
+        assert !spine.delete(container5);
+
+        assert spine.delete(container6);
+        assert !spine.has(container6);
+        assert !spine.delete(container6);
+
+        assert spine.delete(container7);
+        assert !spine.has(container7);
+        assert !spine.delete(container7);
+
+        assert spine.delete(container8);
+        assert !spine.has(container8);
+        assert !spine.delete(container8);
+        assert spine.size() == 0;
+
+        assert !spine.delete(container9);
+        assert !spine.has(container9);
+        assert spine.size() == 0;
     }
 
     @Test

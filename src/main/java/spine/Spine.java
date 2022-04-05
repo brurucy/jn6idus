@@ -6,6 +6,7 @@ import spine.cord.Cord;
 import spine.vertebra.Vertebra;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 class IntegerTuple {
     public int k;
@@ -17,13 +18,48 @@ class IntegerTuple {
     }
 }
 
+class SpineIterator<T extends Comparable<T>> implements Iterator<T> {
+    int currentX;
+    int currentY;
+    int remaining;
+    Spine<T> spine;
+
+    public SpineIterator(Spine<T> spine) {
+        this.currentX = 0;
+        this.currentY = 0;
+        this.spine = spine;
+        this.remaining = spine.size() - 1;
+    }
+
+    public boolean hasNext() {
+        return this.remaining > 0;
+    }
+
+    public T next() {
+        Vertebra<T> currentVertebra = this.spine.vertebrae.get(this.currentX);
+        T currentValue = currentVertebra.get(this.currentY);
+        if (this.currentY == currentVertebra.size() - 1) {
+            if (this.currentX == this.spine.vertebrae.size() - 1) {
+                this.remaining = 0;
+            } else {
+                this.currentY = 0;
+                this.currentX += 1;
+            }
+        } else {
+            this.currentY += 1;
+        }
+        this.remaining -= 1;
+        return currentValue;
+    }
+}
+
 /* Spine is a sorted set data structure. It is a one-level B-Tree without any pointers.
  * */
-public class Spine<T extends Comparable<T>> {
+public class Spine<T extends Comparable<T>> implements Iterable<T> {
     public ArrayList<Vertebra<T>> vertebrae;
+    public int vertebraSize;
     private Cord cord;
     private int length;
-    public int vertebraSize;
 
     /* Initializes the spine with a vertebra size.
      * @param vertebraSize should be set to 1024 unless you have a *very* good reason.
@@ -32,9 +68,13 @@ public class Spine<T extends Comparable<T>> {
         int[] emptyArray = {0};
         this.cord = new Cord(emptyArray);
         this.vertebrae = new ArrayList<>();
-        this.vertebrae.add(new Vertebra<>());
+        this.vertebrae.add(new Vertebra<>(vertebraSize));
         this.vertebraSize = vertebraSize;
         this.length = 0;
+    }
+
+    public Iterator<T> iterator() {
+        return new SpineIterator<>(this);
     }
 
     public int size() {
@@ -49,8 +89,8 @@ public class Spine<T extends Comparable<T>> {
         Vertebra<T> targetVertebra = this.vertebrae.get(firstLevelIndex);
         int firstLevelIndexLength = targetVertebra.size();
         int half = firstLevelIndexLength / 2;
-        Vertebra<T> newVertebra = new Vertebra<>();
-        Vertebra<T> oldVertebra = new Vertebra<>();
+        Vertebra<T> newVertebra = new Vertebra<>(this.vertebraSize);
+        Vertebra<T> oldVertebra = new Vertebra<>(this.vertebraSize);
         for (int i = 0; i < firstLevelIndexLength; i++) {
             if (i < half) {
                 oldVertebra.add(targetVertebra.get(i));
@@ -63,25 +103,37 @@ public class Spine<T extends Comparable<T>> {
         this.buildCord();
     }
 
-    private int spineIndexOf(T key) {
+    private int spineLowerbound(T key) {
         int low = 0;
         int mid;
-        int high = this.vertebrae.size() - 1;
+        int high = this.vertebrae.size();
 
-        while (low <= high) {
+        while (low < high) {
             mid = (low + high) >>> 1;
             Comparable<? super T> midVal = this.vertebrae.get(mid).max;
             int cmp = midVal.compareTo(key);
-
             if (cmp < 0)
                 low = mid + 1;
-            else if (cmp > 0)
-                high = mid - 1;
-            else {
-                return mid;
-            }
+            else
+                high = mid;
         }
+        return low;
+    }
 
+    private int spineUpperbound(T key) {
+        int low = 0;
+        int mid;
+        int high = this.vertebrae.size();
+
+        while (low < high) {
+            mid = (low + high) >>> 1;
+            Comparable<? super T> midVal = this.vertebrae.get(mid).max;
+            int cmp = midVal.compareTo(key);
+            if (cmp > 0)
+                high = mid;
+            else
+                low = mid + 1;
+        }
         return low;
     }
 
@@ -89,20 +141,20 @@ public class Spine<T extends Comparable<T>> {
      * @param key the key to be inserted.
      * @return true if the underlying collection was changed or false otherwise.
      * */
-    public boolean push(T key) {
+    public void push(T key) {
         if (this.length == 0) {
             this.vertebrae.get(0).add(key);
             this.cord.increaseLength(0);
             this.length += 1;
-            return true;
+            return;
         }
-        int vertebraIndex = this.spineIndexOf(key);
+        int vertebraIndex = this.spineLowerbound(key);
         if (vertebraIndex >= this.vertebrae.size()) {
             vertebraIndex -= 1;
         }
         boolean extended = this.vertebrae.get(vertebraIndex).add(key);
         if (!extended) {
-            return false;
+            return;
         }
         if (this.vertebrae.get(vertebraIndex).size() > this.vertebraSize) {
             this.balance(vertebraIndex);
@@ -110,7 +162,12 @@ public class Spine<T extends Comparable<T>> {
             this.cord.increaseLength(vertebraIndex);
         }
         this.length += 1;
-        return true;
+    }
+
+    public void pushAll(Iterable<T> iterable) {
+        for (T i : iterable) {
+            this.push(i);
+        }
     }
 
     /* Deletes a key ensuring sortedness.
@@ -121,28 +178,54 @@ public class Spine<T extends Comparable<T>> {
         if (this.length == 0) {
             return false;
         }
-        int vertebraIndex = this.spineIndexOf(key);
-        if (vertebraIndex >= this.vertebrae.size()) {
-            vertebraIndex -= 1;
-        }
-        boolean shrink = this.vertebrae.get(vertebraIndex).delete(key);
-        if (!shrink) {
+        int lowerBound = this.spineLowerbound(key);
+        int upperBound = this.spineUpperbound(key);
+        if (lowerBound >= this.vertebrae.size()) {
             return false;
         }
-        this.cord.decreaseLength(vertebraIndex);
-        if (this.vertebrae.get(vertebraIndex).size() == 0) {
-            if (this.length != 1) {
-                this.vertebrae.remove(vertebraIndex);
+        boolean shrink = false;
+        int removalLocation = 0;
+        if (lowerBound == upperBound - 1 || lowerBound == upperBound) {
+            if (upperBound + 1 < this.vertebrae.size() && this.vertebrae.get(lowerBound).max.compareTo(key) == 0) {
+                if (this.vertebrae.get(lowerBound).delete(key)) {
+                    shrink = true;
+                    removalLocation = lowerBound;
+                } else if (this.vertebrae.get(upperBound).delete(key)) {
+                    shrink = true;
+                    removalLocation = upperBound;
+                }
+            } else {
+                if (this.vertebrae.get(lowerBound).delete(key)) {
+                    shrink = true;
+                    removalLocation = lowerBound;
+                }
             }
-            this.cord = new Cord(this.vertebrae);
+        } else {
+            for (int i = lowerBound; i < upperBound; i++) {
+                if (this.vertebrae.get(i).delete(key)) {
+                    shrink = true;
+                    removalLocation = i;
+                    break;
+                }
+            }
         }
-        this.length -= 1;
-        return true;
+        if (shrink) {
+            this.cord.decreaseLength(removalLocation);
+            if (this.vertebrae.get(removalLocation).size() == 0) {
+                if (this.length != 1) {
+                    this.vertebrae.remove(removalLocation);
+                }
+                this.cord = new Cord(this.vertebrae);
+            }
+            this.length -= 1;
+            return true;
+        }
+        return false;
     }
 
     private IntegerTuple locate(int ith) {
         if (ith >= this.length || ith < 0) {
-            return new IntegerTuple(-1,-1);
+            return new IntegerTuple(-1, -1);
         }
         int vertebraIndex = this.cord.indexOf(ith);
         int offset = 0;
@@ -201,11 +284,26 @@ public class Spine<T extends Comparable<T>> {
         if (this.length == 0) {
             return false;
         }
-        int vertebraIndex = this.spineIndexOf(key);
-        if (vertebraIndex >= this.vertebrae.size()) {
+        int lowerBound = this.spineLowerbound(key);
+        int upperBound = this.spineUpperbound(key);
+        if (lowerBound >= this.vertebrae.size()) {
             return false;
         }
-        return this.vertebrae.get(vertebraIndex).has(key);
+        if (lowerBound == upperBound - 1 || lowerBound == upperBound) {
+            Vertebra<T> container = this.vertebrae.get(lowerBound);
+            if (upperBound + 1 < this.vertebrae.size() && container.max.compareTo(key) == 0) {
+                return container.has(key) || this.vertebrae.get(upperBound).has(key);
+            } else {
+                return container.has(key);
+            }
+        } else {
+            for (int i = lowerBound; i < upperBound; i++) {
+                if (this.vertebrae.get(i).has(key)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /* Removes and returns the smallest element

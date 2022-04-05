@@ -5,39 +5,63 @@ import java.util.ArrayList;
 public class Vertebra<T> extends ArrayList<T> {
     public T max;
 
-    public int ith(T key) {
+    public Vertebra(int vertebraSize) {
+        this.ensureCapacity(vertebraSize * 2);
+    }
+
+    public int lowerBound(T key) {
         int low = 0;
         int mid;
-        int high = this.size() - 1;
+        int high = this.size();
 
-        while (low <= high) {
+        while (low < high) {
             mid = (low + high) >>> 1;
             Comparable<? super T> midVal = (Comparable<T>) this.get(mid);
             int cmp = midVal.compareTo(key);
-
             if (cmp < 0)
                 low = mid + 1;
-            else if (cmp > 0)
-                high = mid - 1;
-            else {
-                return mid;
-            }
+            else
+                high = mid;
         }
+        return low;
+    }
 
+    public int upperBound(T key) {
+        int low = 0;
+        int mid;
+        int high = this.size();
+
+        while (low < high) {
+            mid = (low + high) >>> 1;
+            Comparable<? super T> midVal = (Comparable<T>) this.get(mid);
+            int cmp = midVal.compareTo(key);
+            if (cmp > 0)
+                high = mid;
+            else
+                low = mid + 1;
+        }
         return low;
     }
 
     public boolean has(T key) {
-        int position = this.ith(key);
-        if (position >= this.size()) {
+        int lowerBound = this.lowerBound(key);
+        int upperBound = this.upperBound(key);
+
+        if (lowerBound >= this.size()) {
             return false;
         }
-        return this.get(position).equals(key);
+
+        for (int i = lowerBound; i < upperBound; i++) {
+            if (this.get(i).equals(key))
+                return true;
+        }
+
+        return false;
     }
 
     @Override
     public boolean add(T key) {
-        int position = this.ith(key);
+        int position = this.lowerBound(key);
         if (position >= this.size()) {
             this.max = key;
             return super.add(key);
@@ -53,19 +77,20 @@ public class Vertebra<T> extends ArrayList<T> {
     }
 
     public boolean delete(T key) {
-        int position = this.ith(key);
-        if (position >= this.size()) {
+        int lowerBound = this.lowerBound(key);
+        int upperBound = this.upperBound(key);
+
+        if (lowerBound >= this.size()) {
             return false;
         }
-        Comparable<? super T> candidate = (Comparable<T>) this.get(position);
-        if (candidate.equals(key)) {
-            int maxCmp = candidate.compareTo(this.max);
-            if (maxCmp == 0) {
-                this.max = this.get(this.size() - 1);
+
+        for (int i = lowerBound; i < upperBound; i++) {
+            if (this.get(i).equals(key)) {
+                this.remove(i);
+                return true;
             }
-            this.remove(position);
-            return true;
         }
+
         return false;
     }
 
